@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    user: "1000:1000"
+    volumes:
+      - ./websiteMaker:/var/www/html/websiteMaker
+      - ./apache-conf/websiteMaker.conf:/etc/apache2/sites-available/000-default.conf
+    environment:
+      DATABASE_URL: "mysql://symfony:symfony@db:3306/symfony"
+    depends_on:
+      - db
+    command: >
+      /bin/bash -c "
+      whoami && \
+      pwd && \
+      ls -al && \
+      if [ ! -f composer.json ]; then \
+        composer create-project symfony/skeleton .; \
+      fi && 
+      composer require twig/twig &&
+      composer require symfony/webpack-encore-bundle &&
+      npm install &&
+      npm install -D tailwindcss postcss postcss-loader autoprefixer &&
+      npx tailwindcss init -p &&  
+      chown -R myuser:myuser /var/www/html/websiteMaker/ && \
+      chmod -R 777 /var/www/html/websiteMaker/ && \
+      a2enmod rewrite && \
+      apache2-foreground
+      "
+
+#      chown -R www-data:www-data /var/www/html/websiteMaker/ && \
+  db:
+    image: mysql:8.0
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: websiteMaker
+      MYSQL_USER: websiteMaker
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    env_file:
+      - .env
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${PHPMYADMIN_PASSWORD}
+
+volumes:
+  db_data:

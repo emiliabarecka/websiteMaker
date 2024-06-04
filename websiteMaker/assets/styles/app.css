@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    background-color: lightgray;
+}
+
+/* assets/styles/app.css */
+
+/* Niestandardowe klasy */
+@layer components {
+    .custom-label {
+        @apply block text-gray-700 text-sm font-bold mb-2;
+    }
+
+    .custom-input {
+        @apply w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500;
+    }
+}
+
